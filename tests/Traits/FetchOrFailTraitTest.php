@@ -180,9 +180,10 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn(null);
         
-        $result = $this->repository->fetchOneOrCreate(['email' => 'new@example.com'], [
-            'name' => 'New User'
-        ]);
+        $result = $this->repository->fetchOneOrCreate(
+            criteria: ['email' => 'new@example.com'],
+            values: ['name' => 'New User']
+        );
         
         $this->assertInstanceOf('App\Entity\TestEntity', $result);
     }
@@ -197,9 +198,10 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn($entity);
         
-        $result = $this->repository->fetchOneOrCreate(['email' => 'existing@example.com'], [
-            'name' => 'Should Not Be Set'
-        ]);
+        $result = $this->repository->fetchOneOrCreate(
+            criteria: ['email' => 'existing@example.com'],
+            values: ['name' => 'Should Not Be Set']
+        );
         
         $this->assertSame($entity, $result);
     }
@@ -212,8 +214,8 @@ class FetchOrFailTraitTest extends TestCase
             ->willReturn(null);
         
         $result = $this->repository->fetchOneOrCreate(
-            ['email' => 'new@example.com'],
-            function($criteria) {
+            criteria: ['email' => 'new@example.com'],
+            callback: function($criteria) {
                 $entity = new \App\Entity\TestEntity();
                 $entity->setEmail('custom@example.com');
                 $entity->setName('Custom Name');
@@ -238,8 +240,8 @@ class FetchOrFailTraitTest extends TestCase
         
         $callbackCalled = false;
         $result = $this->repository->fetchOneOrCreate(
-            ['email' => 'existing@example.com'],
-            function($criteria) use (&$callbackCalled) {
+            criteria: ['email' => 'existing@example.com'],
+            callback: function($criteria) use (&$callbackCalled) {
                 $callbackCalled = true;
                 return new \App\Entity\TestEntity();
             }

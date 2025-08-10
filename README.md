@@ -519,7 +519,7 @@ $results = $repo->requestQuery()
 $repo->fetch($criteria, $orderBy, $limit, $offset)  // Get multiple
 $repo->fetchOne($criteria)                           // Get single
 $repo->fetchOneOrFail($criteria, $exception)        // Get or throw
-$repo->fetchOneOrCreate($criteria, $values)         // Get or create
+$repo->fetchOneOrCreate($criteria, $values, $callback) // Get or create
 $repo->updateOrCreate($criteria, $values)           // Update or create
 $repo->sole($criteria)                              // Exactly one or throw
 ```

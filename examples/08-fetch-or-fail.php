@@ -58,7 +58,7 @@ class RegistrationService
         // Option 1: Using array of values
         $user = $this->userRepo->fetchOneOrCreate(
             criteria: ['email' => $data['email']],
-            valuesOrCallback: [
+            values: [
                 'name' => $data['name'],
                 'status' => 'pending',
                 'created_at' => new DateTime()
@@ -68,7 +68,7 @@ class RegistrationService
         // Option 2: Using callback for complex creation logic
         $user = $this->userRepo->fetchOneOrCreate(
             criteria: ['email' => $data['email']],
-            valuesOrCallback: function($criteria) use ($data) {
+            callback: function($criteria) use ($data) {
                 $user = new User();
                 $user->setName($data['name']);
                 $user->setStatus('pending');
@@ -214,7 +214,7 @@ class UserRepository extends BaseRepository
     {
         $user = $this->fetchOneOrCreate(
             criteria: ['email' => $email],
-            valuesOrCallback: array_merge([
+            values: array_merge([
                 'status' => 'pending',
                 'verification_token' => bin2hex(random_bytes(32)),
                 'created_at' => new DateTime()

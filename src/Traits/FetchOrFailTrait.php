@@ -91,37 +91,43 @@ trait FetchOrFailTrait
      * Fetch one entity or create new one
      *
      * @param array $criteria Search criteria (only used for searching, not for setting values)
-     * @param array|callable|null $valuesOrCallback Array of values to set on new entity, or callback to create entity
+     * @param array|null $values Optional array of values to set on new entity
+     * @param callable|null $callback Optional callback to create entity (overrides $values if provided)
      * @return object The found or created entity
      *
      * @example
      * // Using array of values
      * $user = $repo->fetchOneOrCreate(
-     *     ['email' => 'john@example.com'],
-     *     ['name' => 'John Doe', 'status' => 'active']
+     *     criteria: ['email' => 'john@example.com'],
+     *     values: ['name' => 'John Doe', 'status' => 'active']
      * );
      *
      * // Using callback for custom creation logic
      * $user = $repo->fetchOneOrCreate(
-     *     ['email' => 'john@example.com'],
-     *     function($criteria) {
+     *     criteria: ['email' => 'john@example.com'],
+     *     callback: function($criteria) {
      *         $user = new User();
      *         $user->setName('John Doe');
      *         $user->setToken(bin2hex(random_bytes(16)));
      *         return $user;
      *     }
      * );
+     *
+     * // Using neither (creates empty entity)
+     * $user = $repo->fetchOneOrCreate(
+     *     criteria: ['email' => 'john@example.com']
+     * );
      */
-    public function fetchOneOrCreate(array $criteria, $valuesOrCallback = null): object
+    public function fetchOneOrCreate(array $criteria, ?array $values = null, ?callable $callback = null): object
     {
         $entity = $this->fetchOne($criteria);
 
         if (!$entity)
         {
-            if (is_callable($valuesOrCallback))
+            if ($callback !== null)
             {
                 // Use callback to create entity
-                $entity = $valuesOrCallback($criteria);
+                $entity = $callback($criteria);
             }
             else
             {
@@ -129,10 +135,10 @@ trait FetchOrFailTrait
                 $entityClass = $this->getClassName();
                 $entity = new $entityClass();
 
-                if (is_array($valuesOrCallback))
+                if ($values !== null)
                 {
                     // Set only the provided values (not the criteria)
-                    foreach ($valuesOrCallback as $field => $value)
+                    foreach ($values as $field => $value)
                     {
                         $setter = 'set' . ucfirst($field);
                         if (method_exists($entity, $setter))
