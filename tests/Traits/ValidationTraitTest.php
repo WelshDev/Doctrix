@@ -309,8 +309,10 @@ class ValidationTraitTest extends TestCase
                 [$entities[2]]
             );
         
+        // Entity manager should not be called for flush
+        // The consuming application will handle this
         $this->entityManager
-            ->expects($this->once())
+            ->expects($this->never())
             ->method('flush');
         
         $result = $this->repository->removeDuplicates(['email'], 'first');
@@ -344,8 +346,10 @@ class ValidationTraitTest extends TestCase
                 [$entities[1]]
             );
         
+        // Entity manager should not be called for flush
+        // The consuming application will handle this
         $this->entityManager
-            ->expects($this->once())
+            ->expects($this->never())
             ->method('flush');
         
         $result = $this->repository->removeDuplicates(['email'], 'last');

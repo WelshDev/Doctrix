@@ -136,11 +136,6 @@ trait FetchOrFailTrait
                     $entity->$field = $value;
                 }
             }
-
-            // Persist the entity
-            $em = $this->getEntityManager();
-            $em->persist($entity);
-            $em->flush();
         }
 
         return $entity;
@@ -251,11 +246,7 @@ trait FetchOrFailTrait
                     $entity->$field = $value;
                 }
             }
-
-            $this->getEntityManager()->persist($entity);
         }
-
-        $this->getEntityManager()->flush();
 
         return $entity;
     }

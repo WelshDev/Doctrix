@@ -262,11 +262,6 @@ trait ValidationTrait
             }
         }
 
-        if ($removed > 0)
-        {
-            $em->flush();
-        }
-
         return $removed;
     }
 

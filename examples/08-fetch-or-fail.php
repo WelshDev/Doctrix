@@ -69,6 +69,11 @@ class RegistrationService
         if ($user->getId() === null) {
             echo "Creating new user\n";
             // Send welcome email
+            
+            // Important: The entity is NOT automatically persisted/flushed
+            // The consuming application must handle this:
+            // $entityManager->persist($user);
+            // $entityManager->flush();
         } else {
             echo "User already exists\n";
             // Handle existing user
@@ -96,6 +101,12 @@ class LoginTracker
                 'login_count' => DB::raw('login_count + 1')
             ]
         );
+        
+        // Note: For new entities, you must persist them:
+        // if (!$entityManager->contains($session)) {
+        //     $entityManager->persist($session);
+        // }
+        // $entityManager->flush();
         
         return $session;
     }
@@ -200,6 +211,10 @@ class UserRepository extends BaseRepository
         // Additional logic for new users
         if (!$user->getId()) {
             $this->sendVerificationEmail($user);
+            
+            // Important: Persist the new user
+            // $this->getEntityManager()->persist($user);
+            // $this->getEntityManager()->flush();
         }
         
         return $user;
@@ -265,12 +280,14 @@ echo "   - Perfect for controllers and APIs\n\n";
 echo "2. fetchOneOrCreate:\n";
 echo "   - Returns existing entity or creates new one\n";
 echo "   - Useful for user registration, settings, etc.\n";
-echo "   - Can provide default values for new entities\n\n";
+echo "   - Can provide default values for new entities\n";
+echo "   - NOTE: Does NOT persist/flush - application controls this\n\n";
 
 echo "3. updateOrCreate:\n";
 echo "   - Updates existing or creates new entity\n";
 echo "   - Perfect for upsert operations\n";
-echo "   - Commonly used for sessions, counters, etc.\n\n";
+echo "   - Commonly used for sessions, counters, etc.\n";
+echo "   - NOTE: Does NOT persist/flush - application controls this\n\n";
 
 echo "4. sole():\n";
 echo "   - Ensures exactly one result exists\n";
@@ -282,3 +299,4 @@ echo "- Use fetchOneOrFail in controllers for automatic 404s\n";
 echo "- Use fetchOneOrCreate for idempotent operations\n";
 echo "- Use sole() when data integrity requires exactly one result\n";
 echo "- Always handle exceptions appropriately for your context\n";
+echo "- Remember to persist/flush new entities - library doesn't do this automatically\n";

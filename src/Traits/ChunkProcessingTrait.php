@@ -218,6 +218,7 @@ trait ChunkProcessingTrait
      * @param int $batchSize Size of each batch
      * @param callable $processor Batch processor
      * @param array $criteria Optional criteria
+     * @param bool $autoFlush Whether to automatically flush after each batch (default: true for backward compatibility)
      * @return array Results with successes and failures
      *
      * @example
@@ -226,11 +227,21 @@ trait ChunkProcessingTrait
      *         $entity->setProcessed(true);
      *     }
      * });
+     *
+     * @example
+     * // Without auto-flush (application controls flushing)
+     * $results = $repo->batchProcess(100, function($batch) use ($em) {
+     *     foreach ($batch as $entity) {
+     *         $entity->setProcessed(true);
+     *     }
+     *     $em->flush(); // Application controls when to flush
+     * }, [], false);
      */
     public function batchProcess(
         int $batchSize,
         callable $processor,
         array $criteria = [],
+        bool $autoFlush = true,
     ): array {
         $results = [
             'total' => 0,
@@ -241,27 +252,37 @@ trait ChunkProcessingTrait
 
         $batchNumber = 0;
 
-        $this->chunk($batchSize, function ($batch) use ($processor, &$results, &$batchNumber)
+        $this->chunk($batchSize, function ($batch) use ($processor, &$results, &$batchNumber, $autoFlush)
         {
             $batchNumber++;
             $em = $this->getEntityManager();
 
             try
             {
-                $em->beginTransaction();
+                // Only use transactions when auto-flushing
+                if ($autoFlush)
+                {
+                    $em->beginTransaction();
+                }
 
                 // Process batch
                 $processor($batch, $batchNumber);
 
-                // Flush and commit
-                $em->flush();
-                $em->commit();
+                // Optionally flush and commit
+                if ($autoFlush)
+                {
+                    $em->flush();
+                    $em->commit();
+                }
 
                 $results['success'] += count($batch);
             }
             catch (Exception $e)
             {
-                $em->rollback();
+                if ($autoFlush && $em->getConnection()->isTransactionActive())
+                {
+                    $em->rollback();
+                }
                 $results['failed'] += count($batch);
                 $results['errors'][] = [
                     'batch' => $batchNumber,

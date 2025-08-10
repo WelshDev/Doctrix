@@ -285,13 +285,14 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn($entity);
         
+        // Entity manager should not be called for persist or flush
+        // when an existing entity is found
         $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($entity);
+            ->expects($this->never())
+            ->method('persist');
         
         $this->entityManager
-            ->expects($this->once())
+            ->expects($this->never())
             ->method('flush');
         
         $result = $this->repository->updateOrCreate(
@@ -310,13 +311,14 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn(null);
         
+        // Entity manager should not be called for persist or flush
+        // The consuming application will handle this
         $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($this->isInstanceOf('App\Entity\TestEntity'));
+            ->expects($this->never())
+            ->method('persist');
         
         $this->entityManager
-            ->expects($this->once())
+            ->expects($this->never())
             ->method('flush');
         
         $result = $this->repository->updateOrCreate(

@@ -51,8 +51,9 @@ class UserRepository extends BaseRepository
         }
         
         $user->setPassword($newHashedPassword);
-        $this->getEntityManager()->persist($user);
-        $this->getEntityManager()->flush();
+        // Note: The consuming application should handle persist/flush
+        // $this->getEntityManager()->persist($user);
+        // $this->getEntityManager()->flush();
     }
 }
 
@@ -340,6 +341,8 @@ class UserActivitySubscriber implements EventSubscriberInterface
            ->getQuery()
            ->execute();
         
+        // The consuming application handles when to flush
+        // This gives better control over transaction boundaries
         $this->entityManager->flush();
     }
 }
@@ -430,6 +433,7 @@ class CleanupUsersCommand extends Command
                 $progressBar->advance();
             }
             
+            // Flush all changes at once for efficiency
             $this->entityManager->flush();
             $progressBar->finish();
             
