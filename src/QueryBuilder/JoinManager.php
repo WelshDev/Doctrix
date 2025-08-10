@@ -32,6 +32,9 @@ class JoinManager
      */
     public function applyJoins(QueryBuilder $qb, array $joins): void
     {
+        // Reset applied joins for each new query
+        $this->appliedJoins = [];
+        
         foreach ($joins as $join)
         {
             if (!is_array($join) || count($join) < 3)
