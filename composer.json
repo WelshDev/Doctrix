@@ -1,0 +1,65 @@
+{
+    "name": "welshdev/doctrix",
+    "description": "A powerful, flexible query builder library for Doctrine ORM with enhanced array-based criteria, fluent interfaces, and built-in pagination",
+    "type": "library",
+    "keywords": [
+        "doctrine",
+        "orm",
+        "query-builder",
+        "repository",
+        "database",
+        "dbal",
+        "pagination",
+        "symfony"
+    ],
+    "homepage": "https://github.com/WelshDev/Doctrix",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "WelshDev",
+            "homepage": "https://github.com/WelshDev"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "doctrine/orm": "^2.14 || ^3.0",
+        "doctrine/dbal": "^3.0 || ^4.0",
+        "doctrine/persistence": "^2.0 || ^3.0 || ^4.0",
+        "symfony/doctrine-bridge": "^6.0 || ^7.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.85",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.0",
+        "symfony/var-dumper": "^6.0 || ^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WelshDev\\Doctrix\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WelshDev\\Doctrix\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "phpstan": "vendor/bin/phpstan analyse src --level max",
+        "cs-fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php",
+        "cs-check": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        }
+    }
+}
