@@ -55,14 +55,27 @@ class RegistrationService
     
     public function registerUser(array $data)
     {
-        // Create user if doesn't exist
+        // Option 1: Using array of values
         $user = $this->userRepo->fetchOneOrCreate(
             criteria: ['email' => $data['email']],
-            defaults: [
+            valuesOrCallback: [
                 'name' => $data['name'],
                 'status' => 'pending',
                 'created_at' => new DateTime()
             ]
+        );
+        
+        // Option 2: Using callback for complex creation logic
+        $user = $this->userRepo->fetchOneOrCreate(
+            criteria: ['email' => $data['email']],
+            valuesOrCallback: function($criteria) use ($data) {
+                $user = new User();
+                $user->setName($data['name']);
+                $user->setStatus('pending');
+                $user->setCreatedAt(new DateTime());
+                $user->setVerificationToken(bin2hex(random_bytes(32)));
+                return $user;
+            }
         );
         
         // Check if user was created or already existed
@@ -201,7 +214,7 @@ class UserRepository extends BaseRepository
     {
         $user = $this->fetchOneOrCreate(
             criteria: ['email' => $email],
-            defaults: array_merge([
+            valuesOrCallback: array_merge([
                 'status' => 'pending',
                 'verification_token' => bin2hex(random_bytes(32)),
                 'created_at' => new DateTime()
@@ -280,13 +293,17 @@ echo "   - Perfect for controllers and APIs\n\n";
 echo "2. fetchOneOrCreate:\n";
 echo "   - Returns existing entity or creates new one\n";
 echo "   - Useful for user registration, settings, etc.\n";
-echo "   - Can provide default values for new entities\n";
+echo "   - Criteria is ONLY used for searching, NOT for setting values\n";
+echo "   - Accepts either array of values OR callback for custom creation\n";
+echo "   - Callback receives criteria but decides what to set\n";
 echo "   - NOTE: Does NOT persist/flush - application controls this\n\n";
 
 echo "3. updateOrCreate:\n";
 echo "   - Updates existing or creates new entity\n";
 echo "   - Perfect for upsert operations\n";
 echo "   - Commonly used for sessions, counters, etc.\n";
+echo "   - Criteria is ONLY used for searching, NOT for setting values\n";
+echo "   - Only the 'values' parameter is used to set/update entity properties\n";
 echo "   - NOTE: Does NOT persist/flush - application controls this\n\n";
 
 echo "4. sole():\n";

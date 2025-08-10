@@ -90,101 +90,59 @@ trait FetchOrFailTrait
     /**
      * Fetch one entity or create new one
      *
-     * @param array $criteria Search criteria
-     * @param array $values Values to use when creating
+     * @param array $criteria Search criteria (only used for searching, not for setting values)
+     * @param array|callable|null $valuesOrCallback Array of values to set on new entity, or callback to create entity
      * @return object The found or created entity
      *
      * @example
+     * // Using array of values
      * $user = $repo->fetchOneOrCreate(
      *     ['email' => 'john@example.com'],
      *     ['name' => 'John Doe', 'status' => 'active']
      * );
-     */
-    public function fetchOneOrCreate(array $criteria, array $values = []): object
-    {
-        $entity = $this->fetchOne($criteria);
-
-        if (!$entity)
-        {
-            $entityClass = $this->getClassName();
-            $entity = new $entityClass();
-
-            // Set criteria values
-            foreach ($criteria as $field => $value)
-            {
-                $setter = 'set' . ucfirst($field);
-                if (method_exists($entity, $setter))
-                {
-                    $entity->$setter($value);
-                }
-                elseif (property_exists($entity, $field))
-                {
-                    $entity->$field = $value;
-                }
-            }
-
-            // Set additional values
-            foreach ($values as $field => $value)
-            {
-                $setter = 'set' . ucfirst($field);
-                if (method_exists($entity, $setter))
-                {
-                    $entity->$setter($value);
-                }
-                elseif (property_exists($entity, $field))
-                {
-                    $entity->$field = $value;
-                }
-            }
-        }
-
-        return $entity;
-    }
-
-    /**
-     * Fetch one entity or create new one with callback
      *
-     * @param array $criteria Search criteria
-     * @param callable $callback Callback to create entity
-     * @return object
-     *
-     * @example
-     * $user = $repo->fetchOneOrNew(
-     *     ['email' => $email],
+     * // Using callback for custom creation logic
+     * $user = $repo->fetchOneOrCreate(
+     *     ['email' => 'john@example.com'],
      *     function($criteria) {
      *         $user = new User();
-     *         $user->setEmail($criteria['email']);
+     *         $user->setName('John Doe');
      *         $user->setToken(bin2hex(random_bytes(16)));
      *         return $user;
      *     }
      * );
      */
-    public function fetchOneOrNew(array $criteria, ?callable $callback = null): object
+    public function fetchOneOrCreate(array $criteria, $valuesOrCallback = null): object
     {
         $entity = $this->fetchOne($criteria);
 
         if (!$entity)
         {
-            if ($callback)
+            if (is_callable($valuesOrCallback))
             {
-                $entity = $callback($criteria);
+                // Use callback to create entity
+                $entity = $valuesOrCallback($criteria);
             }
             else
             {
+                // Create entity and set values from array
                 $entityClass = $this->getClassName();
                 $entity = new $entityClass();
 
-                // Set criteria values
-                foreach ($criteria as $field => $value)
+                if (is_array($valuesOrCallback))
                 {
-                    $setter = 'set' . ucfirst($field);
-                    if (method_exists($entity, $setter))
+                    // Set only the provided values (not the criteria)
+                    foreach ($valuesOrCallback as $field => $value)
                     {
-                        $entity->$setter($value);
-                    }
-                    elseif (property_exists($entity, $field))
-                    {
-                        $entity->$field = $value;
+                        $setter = 'set' . ucfirst($field);
+                        if (method_exists($entity, $setter))
+                        {
+                            $entity->$setter($value);
+                        }
+                        elseif (property_exists($entity, $field))
+                        {
+                            $entity->$field = $value;
+                        }
                     }
                 }
             }
@@ -193,14 +151,16 @@ trait FetchOrFailTrait
         return $entity;
     }
 
+
     /**
      * Update existing or create new entity
      *
-     * @param array $criteria Search criteria
-     * @param array $values Values to update/create with
+     * @param array $criteria Search criteria (only used for searching, not for setting values)
+     * @param array $values Values to set/update on the entity
      * @return object The updated or created entity
      *
      * @example
+     * // If product found by SKU, update with values. If not found, create with values only.
      * $product = $repo->updateOrCreate(
      *     ['sku' => 'PROD-123'],
      *     ['price' => 29.99, 'stock' => 100, 'name' => 'Product Name']
@@ -232,9 +192,8 @@ trait FetchOrFailTrait
             $entityClass = $this->getClassName();
             $entity = new $entityClass();
 
-            // Set all values (criteria + additional)
-            $allValues = array_merge($criteria, $values);
-            foreach ($allValues as $field => $value)
+            // Set only the provided values (not the criteria)
+            foreach ($values as $field => $value)
             {
                 $setter = 'set' . ucfirst($field);
                 if (method_exists($entity, $setter))

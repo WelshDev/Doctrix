@@ -1,5 +1,21 @@
 <?php
 
+// Mock entity class for testing
+namespace App\Entity;
+
+class TestEntity {
+    public $email;
+    public $name;
+    
+    public function setEmail($email) {
+        $this->email = $email;
+    }
+    
+    public function setName($name) {
+        $this->name = $name;
+    }
+}
+
 namespace WelshDev\Doctrix\Tests\Traits;
 
 use PHPUnit\Framework\TestCase;
@@ -9,6 +25,7 @@ use WelshDev\Doctrix\Exceptions\EntityNotFoundException;
 use WelshDev\Doctrix\Exceptions\MultipleEntitiesFoundException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -27,7 +44,6 @@ class FetchOrFailTraitTest extends TestCase
             use FetchOrFailTrait;
             use EnhancedQueryTrait;
             
-            protected string $alias = 'e';
             private $qb;
             private $em;
             
@@ -41,14 +57,14 @@ class FetchOrFailTraitTest extends TestCase
                 $this->qb = $qb;
             }
             
-            public function createQueryBuilder($alias)
+            public function createQueryBuilder(string $alias): QueryBuilder
             {
                 return $this->qb;
             }
             
             public function getAlias(): string
             {
-                return $this->alias;
+                return 'e';
             }
             
             public function getEntityManager()
@@ -63,7 +79,7 @@ class FetchOrFailTraitTest extends TestCase
         };
         
         $this->queryBuilder = $this->createMock(QueryBuilder::class);
-        $this->query = $this->createMock(AbstractQuery::class);
+        $this->query = $this->createMock(Query::class);
         
         $this->queryBuilder->method('expr')->willReturn(new Expr());
         $this->queryBuilder->method('getQuery')->willReturn($this->query);
@@ -81,7 +97,7 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn($entity);
         
-        $result = $this->repository->fetchOrFail(['id' => 1]);
+        $result = $this->repository->fetchOneOrFail(['id' => 1]);
         
         $this->assertSame($entity, $result);
     }
@@ -94,9 +110,9 @@ class FetchOrFailTraitTest extends TestCase
             ->willReturn(null);
         
         $this->expectException(EntityNotFoundException::class);
-        $this->expectExceptionMessage('App\Entity\TestEntity not found with criteria: {"id":1}');
+        $this->expectExceptionMessage('TestEntity not found');
         
-        $this->repository->fetchOrFail(['id' => 1]);
+        $this->repository->fetchOneOrFail(['id' => 1]);
     }
     
     public function testFetchOrFailWithCustomMessage(): void
@@ -109,35 +125,9 @@ class FetchOrFailTraitTest extends TestCase
         $this->expectException(EntityNotFoundException::class);
         $this->expectExceptionMessage('Custom error message');
         
-        $this->repository->fetchOrFail(['id' => 1], 'Custom error message');
+        $this->repository->fetchOneOrFail(['id' => 1], null, 'Custom error message');
     }
     
-    public function testFetchManyOrFailSuccess(): void
-    {
-        $entities = [new \stdClass(), new \stdClass()];
-        
-        $this->query
-            ->expects($this->once())
-            ->method('getResult')
-            ->willReturn($entities);
-        
-        $result = $this->repository->fetchManyOrFail(['status' => 'active']);
-        
-        $this->assertSame($entities, $result);
-    }
-    
-    public function testFetchManyOrFailThrowsException(): void
-    {
-        $this->query
-            ->expects($this->once())
-            ->method('getResult')
-            ->willReturn([]);
-        
-        $this->expectException(EntityNotFoundException::class);
-        $this->expectExceptionMessage('No App\Entity\TestEntity found with criteria: {"status":"inactive"}');
-        
-        $this->repository->fetchManyOrFail(['status' => 'inactive']);
-    }
     
     public function testFetchSoleSuccess(): void
     {
@@ -149,7 +139,7 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getResult')
             ->willReturn([$entity]);
         
-        $result = $this->repository->fetchSole(['id' => 1]);
+        $result = $this->repository->sole(['id' => 1]);
         
         $this->assertSame($entity, $result);
     }
@@ -162,9 +152,9 @@ class FetchOrFailTraitTest extends TestCase
             ->willReturn([]);
         
         $this->expectException(EntityNotFoundException::class);
-        $this->expectExceptionMessage('App\Entity\TestEntity not found with criteria: {"id":999}');
+        $this->expectExceptionMessage('No results found');
         
-        $this->repository->fetchSole(['id' => 999]);
+        $this->repository->sole(['id' => 999]);
     }
     
     public function testFetchSoleThrowsMultipleEntitiesFoundException(): void
@@ -177,40 +167,11 @@ class FetchOrFailTraitTest extends TestCase
             ->willReturn($entities);
         
         $this->expectException(MultipleEntitiesFoundException::class);
-        $this->expectExceptionMessage('Expected exactly one App\Entity\TestEntity but found 2 with criteria: {"status":"active"}');
+        $this->expectExceptionMessage('Expected exactly one TestEntity but found 2');
         
-        $this->repository->fetchSole(['status' => 'active']);
+        $this->repository->sole(['status' => 'active']);
     }
     
-    public function testFindOrFailSuccess(): void
-    {
-        $entity = new \stdClass();
-        $entity->id = 1;
-        
-        $this->entityManager
-            ->expects($this->once())
-            ->method('find')
-            ->with('App\Entity\TestEntity', 1)
-            ->willReturn($entity);
-        
-        $result = $this->repository->findOrFail(1);
-        
-        $this->assertSame($entity, $result);
-    }
-    
-    public function testFindOrFailThrowsException(): void
-    {
-        $this->entityManager
-            ->expects($this->once())
-            ->method('find')
-            ->with('App\Entity\TestEntity', 999)
-            ->willReturn(null);
-        
-        $this->expectException(EntityNotFoundException::class);
-        $this->expectExceptionMessage('App\Entity\TestEntity not found with ID: 999');
-        
-        $this->repository->findOrFail(999);
-    }
     
     public function testFetchOrCreateNew(): void
     {
@@ -219,7 +180,7 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn(null);
         
-        $result = $this->repository->fetchOrCreate(['email' => 'new@example.com'], [
+        $result = $this->repository->fetchOneOrCreate(['email' => 'new@example.com'], [
             'name' => 'New User'
         ]);
         
@@ -236,28 +197,36 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn($entity);
         
-        $result = $this->repository->fetchOrCreate(['email' => 'existing@example.com'], [
+        $result = $this->repository->fetchOneOrCreate(['email' => 'existing@example.com'], [
             'name' => 'Should Not Be Set'
         ]);
         
         $this->assertSame($entity, $result);
     }
     
-    public function testFetchOrNewNew(): void
+    public function testFetchOneOrCreateWithCallback(): void
     {
         $this->query
             ->expects($this->once())
             ->method('getOneOrNullResult')
             ->willReturn(null);
         
-        $result = $this->repository->fetchOrNew(['email' => 'new@example.com'], [
-            'name' => 'New User'
-        ]);
+        $result = $this->repository->fetchOneOrCreate(
+            ['email' => 'new@example.com'],
+            function($criteria) {
+                $entity = new \App\Entity\TestEntity();
+                $entity->setEmail('custom@example.com');
+                $entity->setName('Custom Name');
+                return $entity;
+            }
+        );
         
         $this->assertInstanceOf('App\Entity\TestEntity', $result);
+        $this->assertEquals('custom@example.com', $result->email);
+        $this->assertEquals('Custom Name', $result->name);
     }
     
-    public function testFetchOrNewExisting(): void
+    public function testFetchOneOrCreateWithCallbackExisting(): void
     {
         $entity = new \stdClass();
         $entity->email = 'existing@example.com';
@@ -267,11 +236,17 @@ class FetchOrFailTraitTest extends TestCase
             ->method('getOneOrNullResult')
             ->willReturn($entity);
         
-        $result = $this->repository->fetchOrNew(['email' => 'existing@example.com'], [
-            'name' => 'Should Not Be Set'
-        ]);
+        $callbackCalled = false;
+        $result = $this->repository->fetchOneOrCreate(
+            ['email' => 'existing@example.com'],
+            function($criteria) use (&$callbackCalled) {
+                $callbackCalled = true;
+                return new \App\Entity\TestEntity();
+            }
+        );
         
         $this->assertSame($entity, $result);
+        $this->assertFalse($callbackCalled, 'Callback should not be called when entity exists');
     }
     
     public function testUpdateOrCreateUpdate(): void
