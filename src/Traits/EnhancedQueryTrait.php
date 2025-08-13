@@ -121,7 +121,7 @@ trait EnhancedQueryTrait
     public function count(array $criteria = []): int
     {
         $qb = $this->buildQuery($criteria);
-        $qb->select('COUNT(' . $this->getAlias() . ')');
+        $qb->select('COUNT(DISTINCT ' . $this->getAlias() . '.id)');
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }

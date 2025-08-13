@@ -119,7 +119,7 @@ trait BulkOperationsTrait
     public function countMatching(array $criteria = []): int
     {
         $qb = $this->createQueryBuilder($this->getAlias());
-        $qb->select('COUNT(' . $this->getAlias() . '.id)');
+        $qb->select('COUNT(DISTINCT ' . $this->getAlias() . '.id)');
 
         if (!empty($criteria))
         {
