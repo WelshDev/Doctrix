@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use WelshDev\Doctrix\Traits\GlobalScopesTrait;
 use WelshDev\Doctrix\Traits\EnhancedQueryTrait;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 
 class GlobalScopesTraitTest extends TestCase
@@ -21,16 +21,20 @@ class GlobalScopesTraitTest extends TestCase
             use GlobalScopesTrait;
             use EnhancedQueryTrait;
             
-            protected string $alias = 'e';
             private $qb;
             private $testScopes = [];
+            
+            public function __construct()
+            {
+                $this->alias = 'e';
+            }
             
             public function setQueryBuilder($qb)
             {
                 $this->qb = $qb;
             }
             
-            public function createQueryBuilder($alias)
+            public function createQueryBuilder(string $alias): QueryBuilder
             {
                 return $this->qb;
             }
@@ -52,7 +56,7 @@ class GlobalScopesTraitTest extends TestCase
         };
         
         $this->queryBuilder = $this->createMock(QueryBuilder::class);
-        $this->query = $this->createMock(AbstractQuery::class);
+        $this->query = $this->createMock(Query::class);
         
         $this->queryBuilder->method('expr')->willReturn(new Expr());
         $this->queryBuilder->method('andWhere')->willReturnSelf();

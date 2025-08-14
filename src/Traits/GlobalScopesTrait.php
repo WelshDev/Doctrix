@@ -194,6 +194,20 @@ trait GlobalScopesTrait
     }
 
     /**
+     * Create a query builder with global scopes applied
+     *
+     * @param string $alias The query alias
+     * @return QueryBuilder
+     */
+    public function createScopedQueryBuilder(string $alias): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder($alias);
+        $this->applyGlobalScopes($qb);
+
+        return $qb;
+    }
+
+    /**
      * Override in child repositories to modify global scope behavior
      *
      * @return array<string, callable>

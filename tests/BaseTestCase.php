@@ -7,7 +7,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query;
-use Doctrine\ORM\AbstractQuery;
 use Doctrine\Persistence\ManagerRegistry;
 
 abstract class BaseTestCase extends TestCase
@@ -38,13 +37,13 @@ abstract class BaseTestCase extends TestCase
         $this->queryBuilder->method('innerJoin')->willReturnSelf();
         $this->queryBuilder->method('join')->willReturnSelf();
         
-        $query = $this->createMock(AbstractQuery::class);
+        $query = $this->createMock(Query::class);
         $this->queryBuilder->method('getQuery')->willReturn($query);
     }
     
-    protected function createMockQuery(mixed $result = []): AbstractQuery
+    protected function createMockQuery(mixed $result = []): Query
     {
-        $query = $this->createMock(AbstractQuery::class);
+        $query = $this->createMock(Query::class);
         $query->method('getResult')->willReturn($result);
         $query->method('getOneOrNullResult')->willReturn($result[0] ?? null);
         $query->method('getSingleScalarResult')->willReturn(count($result));

@@ -20,15 +20,19 @@ class EnhancedQueryTraitTest extends BaseTestCase
         $this->repository = new class {
             use EnhancedQueryTrait;
             
-            protected string $alias = 'e';
             private $qb;
+            
+            public function __construct()
+            {
+                $this->alias = 'e';
+            }
             
             public function setQueryBuilder($qb)
             {
                 $this->qb = $qb;
             }
             
-            public function createQueryBuilder($alias)
+            public function createQueryBuilder(string $alias): \Doctrine\ORM\QueryBuilder
             {
                 return $this->qb;
             }

@@ -766,8 +766,20 @@ class FluentQueryBuilder
      */
     protected function buildQueryBuilder(): QueryBuilder
     {
+        // Handle global scope exclusions if repository supports them
+        if (!empty($this->withoutScopes) && method_exists($this->repository, 'withoutGlobalScopes'))
+        {
+            $this->repository->withoutGlobalScopes($this->withoutScopes);
+        }
+
         // Use repository's buildQuery method for compatibility
         $qb = $this->repository->buildQuery($this->criteria, $this->orderBy);
+
+        // Reset global scopes if they were excluded
+        if (!empty($this->withoutScopes) && method_exists($this->repository, 'resetGlobalScopes'))
+        {
+            $this->repository->resetGlobalScopes();
+        }
 
         // Apply limit and offset
         if ($this->limit !== null)

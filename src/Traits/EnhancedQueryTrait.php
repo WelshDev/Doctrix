@@ -146,6 +146,12 @@ trait EnhancedQueryTrait
         // Apply filter functions
         $this->getFilterChain()->applyFilters($qb, $this->filterFunctions);
 
+        // Apply global scopes if the repository uses GlobalScopesTrait
+        if (method_exists($this, 'applyGlobalScopes'))
+        {
+            $this->applyGlobalScopes($qb);
+        }
+
         // Apply ordering
         if ($orderBy !== null)
         {
