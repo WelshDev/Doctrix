@@ -506,7 +506,7 @@ class FluentQueryBuilder
     public function count(): int
     {
         $qb = $this->buildQueryBuilder();
-        $qb->select('COUNT(' . $this->repository->getAlias() . ')');
+        $qb->select('COUNT(DISTINCT ' . $this->repository->getAlias() . '.id)');
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
